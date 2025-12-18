@@ -14,8 +14,8 @@ import imageio
 class LiverDataset(data.Dataset):
     def __init__(self, state, transform=None, target_transform=None):
         self.state = state
-        self.train_root = r"E:\codes\new\u_net_liver-master\data\liver\train"
-        self.val_root = r"E:\codes\new\u_net_liver-master\data\liver\val"
+        self.train_root = r"./dataset/liver/train"
+        self.val_root = r"./dataset/liver/val"
         self.test_root = self.val_root
         self.pics,self.masks = self.getDataPath()
         self.transform = transform

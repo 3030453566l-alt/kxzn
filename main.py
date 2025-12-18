@@ -15,6 +15,7 @@ from r2unet import R2U_Net
 from segnet import SegNet
 from unetpp import NestedUNet
 from fcn import get_fcn8s
+from MultiScaleUNet import MultiScaleUNet
 from dataset import *
 from metrics import *
 from torchvision.transforms import transforms
@@ -26,12 +27,11 @@ def getArgs():
     parse.add_argument('--deepsupervision', default=0)
     parse.add_argument("--action", type=str, help="train/test/train&test", default="train&test")
     parse.add_argument("--epoch", type=int, default=21)
-    parse.add_argument('--arch', '-a', metavar='ARCH', default='resnet34_unet',
+    parse.add_argument('--arch', '-a', metavar='ARCH', default='multiUnet',
                        help='UNet/resnet34_unet/unet++/myChannelUnet/Attention_UNet/segnet/r2unet/fcn32s/fcn8s')
     parse.add_argument("--batch_size", type=int, default=1)
-    parse.add_argument('--dataset', default='driveEye',  # dsb2018_256
+    parse.add_argument('--dataset', default='liver',  # dsb2018_256
                        help='dataset name:liver/esophagus/dsb2018Cell/corneal/driveEye/isbiCell/kaggleLung')
-    # parse.add_argument("--ckp", type=str, help="the path of model weight file")
     parse.add_argument("--log_dir", default='result/log', help="log dir")
     parse.add_argument("--threshold",type=float,default=None)
     args = parse.parse_args()
@@ -73,6 +73,8 @@ def getModel(args):
     if args.arch == 'cenet':
         from cenet import CE_Net_
         model = CE_Net_().to(device)
+    if args.arch == 'multiUnet':
+        model = MultiScaleUNet(3,1).to(device)
     return model
 
 def getDataset(args):
@@ -146,6 +148,7 @@ def val(model,best_iou,val_dataloaders):
             miou_total += get_iou(mask[0],img_y)  #获取当前预测图的miou，并加到总miou中
             dice_total += get_dice(mask[0],img_y)
             if i < num:i+=1   #处理验证集下一张图
+        print(num)
         aver_iou = miou_total / num
         aver_hd = hd_total / num
         aver_dice = dice_total/num
@@ -262,7 +265,7 @@ def test(val_dataloaders,save_predict=False):
             plt.imshow(Image.open(mask_path[0]), cmap='Greys_r')
             #print(mask_path[0])
             if save_predict == True:
-                if args.dataset == 'driveEye':
+                if args.dataset == 'liver':
                     saved_predict = dir + '/' + mask_path[0].split('\\')[-1]
                     saved_predict = '.'+saved_predict.split('.')[1] + '.tif'
                     plt.savefig(saved_predict)
